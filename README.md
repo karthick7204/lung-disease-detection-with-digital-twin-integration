@@ -166,19 +166,6 @@ pip install torch torchvision numpy pillow matplotlib
 python predict.py --image "../backend/assets/sample-chest-xray.jpg"
 ```
 
----
-
-## 🔑 Demo Credentials
-
-| Role | Name | Email | Password | Access Level |
-| :--- | :--- | :--- | :--- | :--- |
-| **Doctor** | Dr. Sarah Smith, MD | `doctor.smith@lungtwin.ai` | `LungTwinDoctor2026!` | All patients, X-ray uploads, AI analysis |
-| **Patient 1** | Robert Fox | `robert.fox@example.com` | `PatientPass2026!` | Personal lung records only |
-| **Patient 2** | Emily Watson | `emily.watson@example.com` | `PatientPass2026!` | Personal lung records only |
-
-*(Or click the **1-Click Demo Login** pills in the UI modal)*
-
----
 
 ## 📡 Key API Endpoints
 
