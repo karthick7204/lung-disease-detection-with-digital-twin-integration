@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Environment Variables & Secrets
+.env
+*.env
+!.env.example
+
+# Next.js build output
+.next/
+*/.next/
+out/
+build/
+
+# Python cache & virtual environments
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# Large Datasets & Archives (>100MB blocked by GitHub)
+*.zip
+*.tar
+*.tar.gz
+lung detector/dataset/
+lung detector/chest_xray.zip
+
+# Uploaded scan storage
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# OS generated files
+.DS_Store
+Thumbs.db
+*.pem
+
+*.pth

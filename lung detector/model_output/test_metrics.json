@@ -1,0 +1,54 @@
+{
+    "test_loss": 0.40814827266149223,
+    "test_accuracy_pct": 88.46153846153845,
+    "macro_metrics": {
+        "precision": 0.9113500720312822,
+        "recall": 0.8504273504273505,
+        "f1_score": 0.8685747048430315
+    },
+    "weighted_metrics": {
+        "precision": 0.8964550318995678,
+        "recall": 0.8846153846153846,
+        "f1_score": 0.8800533564232476
+    },
+    "clinical_metrics": {
+        "pneumonia_recall_sensitivity": 0.9871794871794872,
+        "pneumonia_precision": 0.8517699115044248,
+        "normal_recall_specificity": 0.7136752136752137,
+        "normal_precision": 0.9709302325581395
+    },
+    "confusion_matrix": {
+        "true_negatives_normal": 167,
+        "false_positives_pneumonia": 67,
+        "false_negatives_normal": 5,
+        "true_positives_pneumonia": 385
+    },
+    "detailed_classification_report": {
+        "NORMAL": {
+            "precision": 0.9709302325581395,
+            "recall": 0.7136752136752137,
+            "f1-score": 0.8226600985221675,
+            "support": 234.0
+        },
+        "PNEUMONIA": {
+            "precision": 0.8517699115044248,
+            "recall": 0.9871794871794872,
+            "f1-score": 0.9144893111638955,
+            "support": 390.0
+        },
+        "accuracy": 0.8846153846153846,
+        "macro avg": {
+            "precision": 0.9113500720312822,
+            "recall": 0.8504273504273505,
+            "f1-score": 0.8685747048430315,
+            "support": 624.0
+        },
+        "weighted avg": {
+            "precision": 0.8964550318995678,
+            "recall": 0.8846153846153846,
+            "f1-score": 0.8800533564232476,
+            "support": 624.0
+        }
+    },
+    "evaluation_timestamp": "2026-10-28 16:52:37"
+}

@@ -1,0 +1,30 @@
+{
+    "classes": [
+        "NORMAL",
+        "PNEUMONIA"
+    ],
+    "class_to_idx": {
+        "NORMAL": 0,
+        "PNEUMONIA": 1
+    },
+    "idx_to_class": {
+        "0": "NORMAL",
+        "1": "PNEUMONIA"
+    },
+    "image_size": [
+        224,
+        224
+    ],
+    "normalization": {
+        "mean": [
+            0.485,
+            0.456,
+            0.406
+        ],
+        "std": [
+            0.229,
+            0.224,
+            0.225
+        ]
+    }
+}

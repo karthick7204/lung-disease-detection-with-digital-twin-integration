@@ -1,0 +1,236 @@
+{
+  "info": {
+    "_postman_id": "c71a3e89-91a2-4d7e-90e8-lungtwin-backend",
+    "name": "LungTwin AI Backend - Doctor X-Ray Upload",
+    "description": "Postman API collection for testing LungTwin AI Doctor Chest X-Ray Upload service.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "scanId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "health"]
+        }
+      }
+    },
+    {
+      "name": "2. Register Doctor",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Dr. Sarah Smith, MD\",\n  \"email\": \"doctor.smith@lungtwin.ai\",\n  \"password\": \"LungTwinDoctor2026!\",\n  \"licenseNumber\": \"MD-PULM-88921\",\n  \"hospital\": \"Metropolitan Pulmonary Center\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "register"]
+        }
+      }
+    },
+    {
+      "name": "3. Login Doctor (Auto-saves Token)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "if (res.token) {",
+              "    pm.collectionVariables.set('token', res.token);",
+              "    console.log('Saved auth token to collection variable: token');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"doctor.smith@lungtwin.ai\",\n  \"password\": \"LungTwinDoctor2026!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "4. Upload Chest X-Ray (Multipart Form)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "if (res.data && res.data._id) {",
+              "    pm.collectionVariables.set('scanId', res.data._id);",
+              "    console.log('Saved scanId:', res.data._id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "patientName",
+              "value": "John Doe",
+              "type": "text"
+            },
+            {
+              "key": "age",
+              "value": "45",
+              "type": "text"
+            },
+            {
+              "key": "gender",
+              "value": "male",
+              "type": "text"
+            },
+            {
+              "key": "clinicalNote",
+              "value": "Persistent dry cough for 3 weeks. Minor opacity in right lower lobe.",
+              "type": "text"
+            },
+            {
+              "key": "image",
+              "type": "file",
+              "description": "Select assets/sample-chest-xray.jpg or any JPEG/PNG chest radiograph"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/patient-scans",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "patient-scans"]
+        }
+      }
+    },
+    {
+      "name": "5. List Patient Scans (Paginated)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/patient-scans?page=1&limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "patient-scans"],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "10"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "6. Get Scan Details by ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/patient-scans/{{scanId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "patient-scans", "{{scanId}}"]
+        }
+      }
+    },
+    {
+      "name": "7. Retrieve Chest X-Ray Image Stream",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/patient-scans/{{scanId}}/image",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "patient-scans", "{{scanId}}", "image"]
+        }
+      }
+    },
+    {
+      "name": "8. Delete Patient Scan Record",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/patient-scans/{{scanId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "patient-scans", "{{scanId}}"]
+        }
+      }
+    }
+  ]
+}
