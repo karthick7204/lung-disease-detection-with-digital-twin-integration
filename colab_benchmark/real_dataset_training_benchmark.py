@@ -46,16 +46,17 @@ from sklearn.metrics import (
 torch.manual_seed(42)
 np.random.seed(42)
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu"))
 print(f"[*] Training Device: {device}")
 if device.type == "cuda":
     print(f"[*] GPU Name: {torch.cuda.get_device_name(0)}")
+elif device.type == "mps":
+    print("[*] Accelerated Hardware: Apple Silicon GPU (MPS)")
 
 # ==============================================================================
 # CONFIGURATION HYPERPARAMETERS
 # ==============================================================================
-# Set your desired training epochs (as requested by your professor/mam)
-EPOCHS = 15          # e.g., 10, 15, or 20 epochs
+EPOCHS = 60          # 60 epochs for full clinical convergence
 BATCH_SIZE = 32
 LEARNING_RATE = 1e-4
 WEIGHT_DECAY = 1e-4
@@ -77,6 +78,9 @@ def resolve_dataset_root(candidate_path=DATASET_ROOT):
     # 2. Check common Colab / local paths
     common_paths = [
         candidate_path,
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "lung detector", "dataset", "chest_xray")),
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "dataset", "chest_xray")),
+        "/Users/mackbook/Documents/lung/lung-disease-detection-with-digital-twin-integration/lung detector/dataset/chest_xray",
         "/content/chest_xray",
         "/content/chest_xray/chest_xray",
         "/content/dataset",
