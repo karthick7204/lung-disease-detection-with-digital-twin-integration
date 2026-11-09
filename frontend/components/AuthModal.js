@@ -132,14 +132,14 @@ export default function AuthModal({ isOpen, onClose, initialRole = 'doctor' }) {
                 style={styles.demoBtnDoctor}
                 onClick={() =>
                   handleQuickLogin(
-                    'doctor.smith@lungtwin.ai',
+                    'dr.priya.sharma@lungtwin.ai',
                     'LungTwinDoctor2026!',
                     'doctor'
                   )
                 }
                 disabled={loading}
               >
-                🩺 Dr. Sarah Smith (Doctor)
+                🩺 Dr. Priya Sharma (Doctor)
               </button>
             ) : (
               <>
@@ -148,28 +148,28 @@ export default function AuthModal({ isOpen, onClose, initialRole = 'doctor' }) {
                   style={styles.demoBtnPatient}
                   onClick={() =>
                     handleQuickLogin(
-                      'robert.fox@example.com',
+                      'rahul.verma@example.com',
                       'PatientPass2026!',
                       'patient'
                     )
                   }
                   disabled={loading}
                 >
-                  🫁 Robert Fox (Patient)
+                  🫁 Rahul Verma (Patient)
                 </button>
                 <button
                   type="button"
                   style={styles.demoBtnPatient}
                   onClick={() =>
                     handleQuickLogin(
-                      'emily.watson@example.com',
+                      'ananya.iyer@example.com',
                       'PatientPass2026!',
                       'patient'
                     )
                   }
                   disabled={loading}
                 >
-                  🫁 Emily Watson (Patient)
+                  🫁 Ananya Iyer (Patient)
                 </button>
               </>
             )}
@@ -188,7 +188,7 @@ export default function AuthModal({ isOpen, onClose, initialRole = 'doctor' }) {
                 type="text"
                 required
                 style={styles.input}
-                placeholder={activeRole === 'doctor' ? 'Dr. John Doe, MD' : 'John Doe'}
+                placeholder={activeRole === 'doctor' ? 'Dr. Rajesh Sharma, MD' : 'Arjun Kumar'}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />

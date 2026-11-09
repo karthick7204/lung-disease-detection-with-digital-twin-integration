@@ -128,7 +128,7 @@ export default function PatientSearch({ initialPatientName = '' }) {
               <div style={styles.inputWrapper}>
                 <input
                   type="text"
-                  placeholder="Enter patient name (e.g. Robert Fox, Emily Watson)..."
+                  placeholder="Enter patient name (e.g. Rahul Verma, Ananya Iyer)..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   style={styles.searchInput}
@@ -159,7 +159,7 @@ export default function PatientSearch({ initialPatientName = '' }) {
             {/* Quick Search Chips */}
             <div style={styles.chipRow}>
               <span style={styles.chipLabel}>Demo Patients:</span>
-              {['Robert Fox', 'Emily Watson'].map((name) => (
+              {['Rahul Verma', 'Ananya Iyer'].map((name) => (
                 <button
                   key={name}
                   type="button"

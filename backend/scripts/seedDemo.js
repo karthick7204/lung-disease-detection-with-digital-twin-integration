@@ -20,22 +20,34 @@ async function seed() {
     const secret = process.env.JWT_SECRET || 'lungtwin_dev_jwt_secret_key_change_in_production_2026_secure';
 
     // 1. Seed Doctor Account
-    const doctorEmail = 'doctor.smith@lungtwin.ai';
+    const doctorEmail = 'dr.priya.sharma@lungtwin.ai';
     const doctorPassword = 'LungTwinDoctor2026!';
 
     let doctor = await Doctor.findOne({ email: doctorEmail });
     if (!doctor) {
       doctor = await Doctor.create({
-        name: 'Dr. Sarah Smith, MD',
+        name: 'Dr. Priya Sharma, MD',
         email: doctorEmail,
         password: doctorPassword,
         licenseNumber: 'MD-PULM-88921',
-        hospital: 'Metropolitan Pulmonary Center',
+        hospital: 'Apollo Pulmonary Care & Research Institute',
         role: 'doctor',
       });
-      console.log('✅ Demo Doctor account created: Dr. Sarah Smith');
+      console.log('✅ Demo Doctor account created: Dr. Priya Sharma');
     } else {
-      console.log('ℹ️ Demo Doctor account already exists: Dr. Sarah Smith');
+      console.log('ℹ️ Demo Doctor account already exists: Dr. Priya Sharma');
+    }
+
+    // Also support legacy doctor email for compatibility
+    if (!(await Doctor.findOne({ email: 'doctor.smith@lungtwin.ai' }))) {
+      await Doctor.create({
+        name: 'Dr. Priya Sharma, MD',
+        email: 'doctor.smith@lungtwin.ai',
+        password: doctorPassword,
+        licenseNumber: 'MD-PULM-88921',
+        hospital: 'Apollo Pulmonary Care & Research Institute',
+        role: 'doctor',
+      });
     }
 
     const doctorToken = jwt.sign(
@@ -49,25 +61,25 @@ async function seed() {
       { expiresIn: '30d' }
     );
 
-    // 2. Seed Patient Account 1: Robert Fox
-    const patient1Email = 'robert.fox@example.com';
+    // 2. Seed Patient Account 1: Rahul Verma
+    const patient1Email = 'rahul.verma@example.com';
     const patient1Password = 'PatientPass2026!';
 
     let patient1 = await Patient.findOne({ email: patient1Email });
     if (!patient1) {
       patient1 = await Patient.create({
-        name: 'Robert Fox',
+        name: 'Rahul Verma',
         email: patient1Email,
         password: patient1Password,
         role: 'patient',
-        age: 58,
+        age: 54,
         gender: 'male',
         medicalRecordNumber: 'MRN-90214',
-        phone: '+1-555-019-2831',
+        phone: '+91-98765-43210',
       });
-      console.log('✅ Demo Patient account created: Robert Fox');
+      console.log('✅ Demo Patient account created: Rahul Verma');
     } else {
-      console.log('ℹ️ Demo Patient account already exists: Robert Fox');
+      console.log('ℹ️ Demo Patient account already exists: Rahul Verma');
     }
 
     const patient1Token = jwt.sign(
@@ -81,25 +93,25 @@ async function seed() {
       { expiresIn: '30d' }
     );
 
-    // 3. Seed Patient Account 2: Emily Watson
-    const patient2Email = 'emily.watson@example.com';
+    // 3. Seed Patient Account 2: Ananya Iyer
+    const patient2Email = 'ananya.iyer@example.com';
     const patient2Password = 'PatientPass2026!';
 
     let patient2 = await Patient.findOne({ email: patient2Email });
     if (!patient2) {
       patient2 = await Patient.create({
-        name: 'Emily Watson',
+        name: 'Ananya Iyer',
         email: patient2Email,
         password: patient2Password,
         role: 'patient',
-        age: 42,
+        age: 38,
         gender: 'female',
         medicalRecordNumber: 'MRN-78102',
-        phone: '+1-555-018-9923',
+        phone: '+91-98765-11223',
       });
-      console.log('✅ Demo Patient account created: Emily Watson');
+      console.log('✅ Demo Patient account created: Ananya Iyer');
     } else {
-      console.log('ℹ️ Demo Patient account already exists: Emily Watson');
+      console.log('ℹ️ Demo Patient account already exists: Ananya Iyer');
     }
 
     const patient2Token = jwt.sign(
@@ -113,45 +125,47 @@ async function seed() {
       { expiresIn: '30d' }
     );
 
-    // 4. Link existing scans to patients and doctor
-    const updatedFox = await PatientScan.updateMany(
-      { patientName: { $regex: /^robert fox$/i } },
+    // 4. Link existing scans to patients and doctor (handles Rahul Verma, Ananya Iyer, Robert Fox, Emily Watson)
+    const updatedRahul = await PatientScan.updateMany(
+      { patientName: { $regex: /^(rahul verma|robert fox)$/i } },
       {
         $set: {
+          patientName: 'Rahul Verma',
           patient: patient1._id,
           patientEmail: patient1.email,
           uploadedBy: doctor._id,
         },
       }
     );
-    console.log(`🔗 Linked ${updatedFox.modifiedCount} scans to patient Robert Fox.`);
+    console.log(`🔗 Linked ${updatedRahul.modifiedCount} scans to patient Rahul Verma.`);
 
-    const updatedWatson = await PatientScan.updateMany(
-      { patientName: { $regex: /^emily watson$/i } },
+    const updatedAnanya = await PatientScan.updateMany(
+      { patientName: { $regex: /^(ananya iyer|emily watson)$/i } },
       {
         $set: {
+          patientName: 'Ananya Iyer',
           patient: patient2._id,
           patientEmail: patient2.email,
           uploadedBy: doctor._id,
         },
       }
     );
-    console.log(`🔗 Linked ${updatedWatson.modifiedCount} scans to patient Emily Watson.`);
+    console.log(`🔗 Linked ${updatedAnanya.modifiedCount} scans to patient Ananya Iyer.`);
 
     console.log('\n====================================================');
-    console.log('🩺 DEMO DOCTOR CREDENTIALS:');
+    console.log('🩺 DEMO DOCTOR (Dr. Priya Sharma) CREDENTIALS:');
     console.log(`Email:    ${doctor.email}`);
     console.log(`Password: ${doctorPassword}`);
     console.log(`Role:     ${doctor.role}`);
     console.log(`Doctor Token: Bearer ${doctorToken}`);
     console.log('----------------------------------------------------');
-    console.log('🫁 DEMO PATIENT 1 (Robert Fox) CREDENTIALS:');
+    console.log('🫁 DEMO PATIENT 1 (Rahul Verma) CREDENTIALS:');
     console.log(`Email:    ${patient1.email}`);
     console.log(`Password: ${patient1Password}`);
     console.log(`Role:     ${patient1.role}`);
     console.log(`Patient Token: Bearer ${patient1Token}`);
     console.log('----------------------------------------------------');
-    console.log('🫁 DEMO PATIENT 2 (Emily Watson) CREDENTIALS:');
+    console.log('🫁 DEMO PATIENT 2 (Ananya Iyer) CREDENTIALS:');
     console.log(`Email:    ${patient2.email}`);
     console.log(`Password: ${patient2Password}`);
     console.log(`Role:     ${patient2.role}`);

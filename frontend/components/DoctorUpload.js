@@ -141,7 +141,7 @@ export default function DoctorUpload({ onScanCreated, onSwitchToPatient }) {
               </div>
               <button
                 type="button"
-                onClick={() => login('doctor.smith@lungtwin.ai', 'LungTwinDoctor2026!', 'doctor')}
+                onClick={() => login('dr.priya.sharma@lungtwin.ai', 'LungTwinDoctor2026!', 'doctor')}
                 style={{
                   background: 'rgba(234, 179, 8, 0.25)',
                   border: '1px solid rgba(234, 179, 8, 0.6)',
@@ -153,7 +153,7 @@ export default function DoctorUpload({ onScanCreated, onSwitchToPatient }) {
                   cursor: 'pointer'
                 }}
               >
-                Sign In as Dr. Smith
+                Sign In as Dr. Sharma
               </button>
             </div>
           )}
@@ -167,7 +167,7 @@ export default function DoctorUpload({ onScanCreated, onSwitchToPatient }) {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Robert Fox, Emily Watson"
+                  placeholder="e.g. Rahul Verma, Ananya Iyer"
                   value={patientName}
                   onChange={(e) => setPatientName(e.target.value)}
                   style={styles.input}
@@ -179,7 +179,7 @@ export default function DoctorUpload({ onScanCreated, onSwitchToPatient }) {
                 <label style={styles.label}>Patient Account Email</label>
                 <input
                   type="email"
-                  placeholder="e.g. robert.fox@example.com"
+                  placeholder="e.g. rahul.verma@example.com"
                   value={patientEmail}
                   onChange={(e) => setPatientEmail(e.target.value)}
                   style={styles.input}

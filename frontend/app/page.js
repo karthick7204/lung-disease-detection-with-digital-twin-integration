@@ -11,7 +11,7 @@ export default function Home() {
   const { user, isDoctor, isPatient } = useAuth();
 
   const [activeTab, setActiveTab] = useState('doctor');
-  const [selectedPatientName, setSelectedPatientName] = useState('Robert Fox');
+  const [selectedPatientName, setSelectedPatientName] = useState('Rahul Verma');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalRole, setAuthModalRole] = useState('doctor');
 
