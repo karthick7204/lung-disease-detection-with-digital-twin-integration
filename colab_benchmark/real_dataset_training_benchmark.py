@@ -497,7 +497,43 @@ def run_real_training_benchmark(dataset_path=DATASET_ROOT, epochs=EPOCHS):
     print("ALL TRAINING, EVALUATION, AND PLOTTING FINISHED SUCCESSFULLY!")
     print("="*80)
 
+    # 6. Interactive Image Upload Comparison
+    try:
+        from google.colab import files
+        print("\n" + "="*80)
+        print("INTERACTIVE IMAGE UPLOAD TEST")
+        print("="*80)
+        print("👇 Click 'Choose Files' to upload a patient Chest X-ray file:")
+        uploaded = files.upload()
+        for fn in uploaded.keys():
+            raw_img = Image.open(fn).convert('RGB')
+            eval_tf = transforms.Compose([
+                transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ])
+            inp = eval_tf(raw_img).unsqueeze(0).to(device)
+            
+            print(f"\nEvaluating Uploaded X-Ray: {fn}")
+            print(f"{'Model Architecture':<30} | {'Diagnosis':<15} | {'Confidence':<12} | {'Digital Twin Severity'}")
+            print("-" * 80)
+            for m_name, m_mod in models_to_train.items():
+                m_mod.eval()
+                with torch.no_grad():
+                    if "Attentive" in m_name:
+                        logits, sev = m_mod(inp, return_severity=True)
+                        sev_txt = f"{sev.item():.1f}% aeration loss"
+                    else:
+                        logits = m_mod(inp)
+                        sev_txt = "N/A (No Dual Head)"
+                    p = F.softmax(logits, dim=1)[0]
+                    p_idx = torch.argmax(p).item()
+                    print(f"{m_name:<30} | {class_names[p_idx]:<15} | {p[p_idx].item()*100:>6.1f}%     | {sev_txt}")
+    except ImportError:
+        pass
+
 
 if __name__ == "__main__":
     # If running locally or in Colab:
     run_real_training_benchmark(dataset_path=DATASET_ROOT, epochs=EPOCHS)
+
