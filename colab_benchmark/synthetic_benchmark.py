@@ -425,6 +425,21 @@ def generate_gradcam_comparison(models_dict, sample_img_tensor, output_filename=
 # MAIN BENCHMARK RUNNER
 # ==============================================================================
 
+def quick_train_synthetic(model, train_loader, epochs=3):
+    """Quick 3-epoch synthetic adaptation so the models actually learn before benchmarking."""
+    model.train()
+    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
+    criterion = nn.CrossEntropyLoss()
+    for _ in range(epochs):
+        for x_b, y_b in train_loader:
+            x_b, y_b = x_b.to(device), y_b.to(device)
+            optimizer.zero_grad()
+            out = model(x_b)
+            loss = criterion(out, y_b)
+            loss.backward()
+            optimizer.step()
+    return model
+
 def run_benchmark():
     print("\n" + "="*80)
     print("STARTING COMPREHENSIVE ARCHITECTURAL BENCHMARK")
@@ -437,7 +452,10 @@ def run_benchmark():
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
 
+    train_dataset = ChestXraySyntheticBenchmarkDataset(num_samples=400, transform=transform)
     test_dataset = ChestXraySyntheticBenchmarkDataset(num_samples=250, transform=transform)
+    
+    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
 
     # 2. Instantiate all models
@@ -456,6 +474,8 @@ def run_benchmark():
     print("-" * 80)
 
     for name, model in models_dict.items():
+        # Quick synthetic adaptation (takes ~2 seconds per model)
+        model = quick_train_synthetic(model, train_loader, epochs=3)
         total_p, _ = count_parameters(model)
         latency = measure_latency(model)
         eval_metrics = evaluate_model(model, test_loader)
