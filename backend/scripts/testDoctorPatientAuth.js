@@ -222,22 +222,10 @@ async function runAuthRoleTests() {
     // Server must force patient's identity (Rahul Verma or Robert Fox), not return Ananya Iyer
     if (res.status === 200 && ['rahul verma', 'robert fox'].includes(data.patientName?.toLowerCase())) {
       console.log(`✅ PASSED (Search was safely forced to ${data.patientName}, Ananya's data NOT exposed)`);
-    } else {
-      console.log('❌ FAILED:', res.status, data);
-    }
-  } catch (err) {
-    console.log('❌ FAILED:', err.message);
-  }
-      headers: { Authorization: `Bearer ${patientToken}` },
-    });
-    const data = await res.json();
-    // Server must force patient's identity (Robert Fox), not return Emily Watson
-    if (res.status === 200 && data.patientName?.toLowerCase() === 'robert fox') {
-      console.log(`✅ PASSED (Search was safely forced to Robert Fox, Emily's data NOT exposed)`);
     } else if (res.status === 403) {
       console.log(`✅ PASSED (Blocked with 403 Forbidden)`);
     } else {
-      console.log('❌ FAILED: Data isolation violated:', data.patientName);
+      console.log('❌ FAILED:', res.status, data);
     }
   } catch (err) {
     console.log('❌ FAILED:', err.message);
