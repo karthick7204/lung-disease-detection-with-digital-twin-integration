@@ -63,7 +63,73 @@ IMAGE_SIZE = 224
 
 # Set your dataset paths. In Colab, if uploaded as a zip or in Google Drive:
 # E.g.: /content/chest_xray or /content/drive/MyDrive/chest_xray
-DATASET_ROOT = "./dataset"  # Change to your actual path e.g. "/content/chest_xray"
+DATASET_ROOT = "./dataset"  # Automatically scanned or prompted below
+
+def resolve_dataset_root(candidate_path=DATASET_ROOT):
+    """
+    Automatically detects or prompts to upload the dataset zip if not found.
+    Handles nested folders like /content/chest_xray/chest_xray/train.
+    """
+    # 1. Check if candidate path has a 'train' directory
+    if os.path.exists(os.path.join(candidate_path, "train")):
+        return candidate_path
+
+    # 2. Check common Colab / local paths
+    common_paths = [
+        candidate_path,
+        "/content/chest_xray",
+        "/content/chest_xray/chest_xray",
+        "/content/dataset",
+        "/content/dataset/chest_xray",
+        "/content/drive/MyDrive/chest_xray"
+    ]
+    for p in common_paths:
+        if os.path.exists(os.path.join(p, "train")):
+            print(f"[*] Found valid dataset at: {p}")
+            return p
+
+    # 3. Check for any zip file in current directory or /content to extract
+    import zipfile
+    search_dirs = [".", "/content"]
+    for s_dir in search_dirs:
+        if os.path.exists(s_dir):
+            for f in os.listdir(s_dir):
+                if f.endswith(".zip") and ("chest" in f.lower() or "xray" in f.lower() or "dataset" in f.lower()):
+                    zip_path = os.path.join(s_dir, f)
+                    target_ext = "/content/dataset" if os.path.exists("/content") else "./dataset"
+                    print(f"[*] Found zip file '{zip_path}'. Auto-extracting to '{target_ext}'...")
+                    with zipfile.ZipFile(zip_path, 'r') as z:
+                        z.extractall(target_ext)
+                    # Check nested extracted folders
+                    for root, dirs, _ in os.walk(target_ext):
+                        if "train" in dirs:
+                            return root
+
+    # 4. If in Google Colab and still not found, prompt interactive upload or kaggle download
+    try:
+        from google.colab import files
+        print("\n" + "="*70)
+        print("DATASET NOT FOUND IN LOCAL FOLDER!")
+        print("="*70)
+        print("👉 Option 1: Upload your dataset zip file right now:")
+        uploaded = files.upload()
+        for fn in uploaded.keys():
+            if fn.endswith(".zip"):
+                target_ext = "/content/dataset"
+                with zipfile.ZipFile(fn, 'r') as z:
+                    z.extractall(target_ext)
+                for root, dirs, _ in os.walk(target_ext):
+                    if "train" in dirs:
+                        return root
+    except ImportError:
+        pass
+
+    raise FileNotFoundError(
+        f"\n[!] Dataset directory not found at '{candidate_path}' and no 'train/' folder was detected.\n"
+        f"    Please either:\n"
+        f"    1. Upload your dataset zip into Colab, or\n"
+        f"    2. Set DATASET_ROOT = 'path/to/your/chest_xray' (where 'train' folder is located)."
+    )
 
 
 # ==============================================================================
@@ -201,6 +267,8 @@ def get_dataloaders(data_dir=DATASET_ROOT, batch_size=BATCH_SIZE):
       val/   (NORMAL, PNEUMONIA)
       test/  (NORMAL, PNEUMONIA)
     """
+    data_dir = resolve_dataset_root(data_dir)
+
     train_transforms = transforms.Compose([
         transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
         transforms.RandomHorizontalFlip(p=0.5),
