@@ -1,0 +1,6 @@
+Architecture,Parameters (M),Inference Latency (ms),Accuracy (%),Sensitivity/Recall (%),Specificity (%),F1-Score (%),ROC-AUC
+ResNet-18 (Baseline),11.18,3.48,46.8,0.0,100.0,0.0,1.0
+Attentive-LungNet (Proposed),11.28,4.19,46.8,0.0,100.0,0.0,0.0
+DenseNet-121 (CheXNet),6.96,26.21,46.8,0.0,100.0,0.0,1.0
+Attentive-DenseNet (Proposed),7.09,25.4,53.2,100.0,0.0,69.45,1.0
+EfficientNet-B0 (Baseline),4.01,12.13,46.8,0.0,100.0,0.0,0.5
