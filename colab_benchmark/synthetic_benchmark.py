@@ -35,6 +35,14 @@ import torchvision
 from torchvision import models, transforms
 from PIL import Image
 
+# ==============================================================================
+# CONFIGURATION HYPERPARAMETERS
+# ==============================================================================
+EPOCHS = 50          # 50+ epochs as requested for full convergence
+BATCH_SIZE = 32
+LEARNING_RATE = 5e-4
+WEIGHT_DECAY = 1e-4
+
 # Metrics from scikit-learn
 from sklearn.metrics import (
     accuracy_score,
@@ -250,37 +258,43 @@ class EfficientNetB0Baseline(nn.Module):
 class ChestXraySyntheticBenchmarkDataset(Dataset):
     """
     Self-contained synthetic clinical evaluation dataset generator.
-    Allows running the entire benchmark suite immediately without downloading 2.5GB.
-    If you have real images, you can substitute this with torchvision.datasets.ImageFolder.
+    Produces deterministic synthetic chest X-rays with lung fields, rib bones,
+    and pneumonia infiltrates that remain consistent across all 50+ training epochs.
     """
-    def __init__(self, num_samples=300, transform=None):
+    def __init__(self, num_samples=300, transform=None, seed=42):
         self.num_samples = num_samples
         self.transform = transform
-        self.labels = np.random.choice([0, 1], size=num_samples, p=[0.45, 0.55])
+        rng = np.random.RandomState(seed)
+        self.labels = rng.choice([0, 1], size=num_samples, p=[0.5, 0.5])
+        self.offsets_x = rng.randint(-6, 6, size=num_samples)
+        self.offsets_y = rng.randint(-8, 8, size=num_samples)
+        self.intensities = rng.randint(85, 115, size=num_samples)
         
     def __len__(self):
         return self.num_samples
 
     def __getitem__(self, idx):
         label = self.labels[idx]
-        # Generate synthetic chest X-ray like pattern
-        # Background dark, lungs oval shape, opacities added for pneumonia (label=1)
         img = np.zeros((224, 224, 3), dtype=np.uint8)
         y, x = np.ogrid[:224, :224]
-        # Left and right lung approximations
+        
+        # Left and right dark lung cavities (aerated spaces)
         mask_left = ((x - 80)**2 / (40**2) + (y - 110)**2 / (70**2)) <= 1
         mask_right = ((x - 144)**2 / (40**2) + (y - 110)**2 / (70**2)) <= 1
         lung_mask = mask_left | mask_right
-        img[lung_mask] = 60 # Dark lung fields
+        img[lung_mask] = 65 
         
-        # Rib artifacts
+        # Rib bone artifacts (radiopaque horizontal structures)
         for rib_y in range(50, 190, 25):
             img[rib_y:rib_y+4, :] += 40
             
-        # If pneumonia, add patchy infiltrates (hazy white opacities)
+        # If Pneumonia (label=1), inject parenchymal infiltration (consolidation opacity)
         if label == 1:
-            opacity_mask = ((x - 85)**2 / (25**2) + (y - 130)**2 / (30**2)) <= 1
-            img[opacity_mask] += 90
+            ox = self.offsets_x[idx]
+            oy = self.offsets_y[idx]
+            intensity = int(self.intensities[idx])
+            opacity_mask = (((x - (85 + ox))**2 / (24**2)) + ((y - (130 + oy))**2 / (28**2))) <= 1
+            img[opacity_mask] += intensity
 
         img = Image.fromarray(np.clip(img, 0, 255))
         if self.transform:
@@ -425,12 +439,24 @@ def generate_gradcam_comparison(models_dict, sample_img_tensor, output_filename=
 # MAIN BENCHMARK RUNNER
 # ==============================================================================
 
-def quick_train_synthetic(model, train_loader, epochs=3):
-    """Quick 3-epoch synthetic adaptation so the models actually learn before benchmarking."""
+def train_synthetic_benchmark_model(model_name, model, train_loader, epochs=EPOCHS):
+    """
+    Trains each architecture on the synthetic benchmark dataset for 50+ epochs.
+    Prints progress every 10 epochs and tracks loss/accuracy convergence.
+    """
+    print(f"\n[*] Training {model_name} for {epochs} Epochs...")
     model.train()
-    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
     criterion = nn.CrossEntropyLoss()
-    for _ in range(epochs):
+    
+    best_loss = float('inf')
+    best_weights = copy.deepcopy(model.state_dict())
+
+    for epoch in range(1, epochs + 1):
+        total_loss = 0.0
+        correct = 0
+        total = 0
         for x_b, y_b in train_loader:
             x_b, y_b = x_b.to(device), y_b.to(device)
             optimizer.zero_grad()
@@ -438,11 +464,29 @@ def quick_train_synthetic(model, train_loader, epochs=3):
             loss = criterion(out, y_b)
             loss.backward()
             optimizer.step()
+            total_loss += loss.item() * x_b.size(0)
+            preds = torch.argmax(out, dim=1)
+            correct += (preds == y_b).sum().item()
+            total += y_b.size(0)
+
+        epoch_loss = total_loss / total
+        epoch_acc = (correct / total) * 100.0
+        scheduler.step()
+
+        if epoch_loss < best_loss:
+            best_loss = epoch_loss
+            best_weights = copy.deepcopy(model.state_dict())
+
+        # Print progress every 10 epochs (or final epoch)
+        if epoch == 1 or epoch % 10 == 0 or epoch == epochs:
+            print(f"    Epoch [{epoch:02d}/{epochs:02d}] Loss: {epoch_loss:.4f} | Training Acc: {epoch_acc:.1f}%")
+
+    model.load_state_dict(best_weights)
     return model
 
-def run_benchmark():
+def run_benchmark(epochs=EPOCHS):
     print("\n" + "="*80)
-    print("STARTING COMPREHENSIVE ARCHITECTURAL BENCHMARK")
+    print(f"STARTING COMPREHENSIVE ARCHITECTURAL BENCHMARK ({epochs} EPOCHS)")
     print("="*80)
 
     # 1. Dataset Transforms
@@ -452,11 +496,11 @@ def run_benchmark():
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
 
-    train_dataset = ChestXraySyntheticBenchmarkDataset(num_samples=400, transform=transform)
-    test_dataset = ChestXraySyntheticBenchmarkDataset(num_samples=250, transform=transform)
+    train_dataset = ChestXraySyntheticBenchmarkDataset(num_samples=400, transform=transform, seed=42)
+    test_dataset = ChestXraySyntheticBenchmarkDataset(num_samples=250, transform=transform, seed=999)
     
-    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
     # 2. Instantiate all models
     models_dict = {
@@ -470,12 +514,9 @@ def run_benchmark():
     results = []
     roc_data = {}
 
-    print(f"\n{'Model Architecture':<30} | {'Params (M)':<10} | {'Latency (ms)':<12} | {'Recall (%)':<10} | {'ROC-AUC':<8}")
-    print("-" * 80)
-
     for name, model in models_dict.items():
-        # Quick synthetic adaptation (takes ~2 seconds per model)
-        model = quick_train_synthetic(model, train_loader, epochs=3)
+        # Train for 50+ epochs
+        model = train_synthetic_benchmark_model(name, model, train_loader, epochs=epochs)
         total_p, _ = count_parameters(model)
         latency = measure_latency(model)
         eval_metrics = evaluate_model(model, test_loader)
