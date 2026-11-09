@@ -198,3 +198,5 @@ python predict.py --image "../backend/assets/sample-chest-xray.jpg"
 **Karthick**  
 GitHub: [@karthick7204](https://github.com/karthick7204)  
 Project Repository: [lung-disease-detection-with-digital-twin-integration](https://github.com/karthick7204/lung-disease-detection-with-digital-twin-integration)
+
+
